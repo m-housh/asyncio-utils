@@ -140,7 +140,7 @@ async def transform_factory(iterator: IteratorType, _type: TransformType=None
 
     """
     if not callable(_type):
-        raise TypeError(f'{_type} is not callable')
+        raise TypeError('{} is not callable'.format(_type))
 
     iterator = await aiter(iterator)
     if inspect.iscoroutinefunction(_type):
