@@ -1,6 +1,6 @@
 name: py36
 dependencies:
-- python 3.6*
+- python==3.6.1
 - pip>=9.0.1
 - pip:
   - sphinx-autodoc-typehints
