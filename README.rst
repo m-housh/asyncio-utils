@@ -6,8 +6,8 @@ asyncio-utils
 .. image:: https://img.shields.io/pypi/v/asyncio_utils.svg
         :target: https://pypi.python.org/pypi/asyncio_utils
 
-.. image:: https://img.shields.io/travis/m-housh/asyncio_utils.svg
-        :target: https://travis-ci.org/m-housh/asyncio_utils
+.. image:: https://img.shields.io/travis/m-housh/asyncio-utils.svg
+        :target: https://travis-ci.org/m-housh/asyncio-utils
 
 .. image:: https://coveralls.io/repos/github/m-housh/asyncio-utils/badge.svg?branch=master
     :target: https://coveralls.io/github/m-housh/asyncio-utils?branch=master
