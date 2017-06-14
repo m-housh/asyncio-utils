@@ -12,9 +12,6 @@ asyncio-utils
 .. image:: https://coveralls.io/repos/github/m-housh/asyncio-utils/badge.svg?branch=master
     :target: https://coveralls.io/github/m-housh/asyncio-utils?branch=master
 
-.. image:: https://readthedocs.org/projects/asyncio-utils/badge/?version=latest
-        :target: https://asyncio-utils.readthedocs.io/en/latest/?badge=latest
-        :alt: Documentation Status
 
 Asyncio utilities for python >= 3.6
 
