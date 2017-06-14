@@ -9,7 +9,7 @@ env:
 
 # command to install dependencies, e.g. pip install -r requirements.txt --use-mirrors
 install: 
-  - pip install -U tox coveralls tox-travis
+  - pip install -U tox coveralls tox-travis pytest pytest-cov pytest-asyncio
   - pip install -U .
 
 # command to run tests, e.g. python setup.py test
