@@ -20,7 +20,6 @@ asynchronous fashion.
 
 
 * Free software: MIT license
-* Documentation: https://asyncio-utils.readthedocs.io.
 
 
 Features
