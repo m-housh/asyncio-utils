@@ -8,7 +8,7 @@ import functools
 
 __author__ = """Michael Housh"""
 __email__ = 'mhoush@houshhomeenergy.com'
-__version__ = '0.1.3'
+__version__ = '0.1.4'
 
 __all__ = (
     'aiter',
