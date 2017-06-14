@@ -129,6 +129,12 @@ async def test_make_async():
     async_always_one = make_async(always_one)
     assert await async_always_one() == always_one()
 
+    @make_async
+    def sync_a():
+        return 'a'
+
+    assert await sync_a() == 'a'
+
 
     @make_async
     class AlwaysOneClass(object):
@@ -144,9 +150,7 @@ async def test_make_async():
 
 
 async def test_afilter():
-
-    myrange = await arange(1, 5)
-    myfilter = afilter(lambda x: x == 2, myrange)
+    myfilter = afilter(lambda x: x == 2, arange(1, 5))
     assert await anext(myfilter) == 2
     assert await anext(myfilter, None) is None
 
