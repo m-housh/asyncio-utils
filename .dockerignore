@@ -4,4 +4,4 @@ __pycache__/*
 
 *.pyc
 
-.python_version
+.python-version
