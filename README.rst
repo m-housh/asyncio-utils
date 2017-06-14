@@ -45,7 +45,8 @@ To run any of the examples::
 
 
 aiter
------
+--------------
+
 Wraps/ensures an ``AsyncIterator``.  
 
 If the input is a coroutine (has not been awaited), then we will await the
@@ -57,9 +58,8 @@ input.
 If the input (or awaited result) is not an ``AsyncIterator`` then, but is an
 iterable, then we will wrap the iterable into an ``AsyncIterator``.
 
+Example::  
 
-::
-    
     >>> async def main():
             # wraps a normal type that is iterable.
             iterator = await aiter(range(1, 5))
@@ -96,7 +96,7 @@ make_aiter
 ----------
 
 Non-async method that Wraps an iterator in an 
-:class:`collections.AsyncIterator`.  If the input has not been awaited on
+``AsyncIterator``.  If the input has not been awaited on
 (is a coroutine) or is already and AsyncIterator, then we do nothing and
 return the input.
 
@@ -104,11 +104,12 @@ return the input.
 
 
 anext
------
+-----------------
 
 Mimics the builtin ``next`` method.
 
-::
+Example::  
+
     >>> async def main():
         myrange = await arange(1, 5)
         for n in range(1, 5):
@@ -138,11 +139,12 @@ Mimics the builtin ``next`` method.
 
 
 arange
-------
+---------------------
 
 Mimics the builtin ``range`` method.  Returning an ``AsyncIterator``.
 
-::
+Example::  
+
     >>> async def main():
             myrange = await arange(1, 5)
             async for n in myrange:
@@ -156,14 +158,16 @@ Mimics the builtin ``range`` method.  Returning an ``AsyncIterator``.
 
 
 alist
------
+------------------
 
-Transform an ``AsyncIterator`` to a list. This would be equivalent to::
+Transform an ``AsyncIterator`` to a list. This would be equivalent to::  
+
     [v async for v in async_iterator]
 
 However we ensure that the ``async_iterator`` is actually an ``AsyncIterator``.
 
-::
+Example::  
+
     >>> async def main():
             print(await alist(arange(1, 5)))
             # or
@@ -175,14 +179,16 @@ However we ensure that the ``async_iterator`` is actually an ``AsyncIterator``.
 
 
 atuple
-------
+-----------------
 
-Transform an ``AsyncIterator`` to a ``tuple``. This would be equivalent to::
+Transform an ``AsyncIterator`` to a ``tuple``. This would be equivalent to::  
+
     tuple([v async for v in async_iterator])
 
 However we ensure that the ``async_iterator`` is actually an ``AsyncIterator``.
 
-::
+Example::  
+
     >>> async def main():
             print(await atuple(arange(1, 5)))
             # or
@@ -194,14 +200,16 @@ However we ensure that the ``async_iterator`` is actually an ``AsyncIterator``.
 
 
 aset
-----
+-------------
 
-Transform an ``AsyncIterator`` to a ``set``. This would be equivalent to::
+Transform an ``AsyncIterator`` to a ``set``. This would be equivalent to::  
+
     {v async for v in async_iterator}
 
 However we ensure that the ``async_iterator`` is actually an ``AsyncIterator``.
 
-::
+Example::  
+
     >>> async def main():
             print(await aset(arange(1, 5)))
             # or
@@ -213,14 +221,16 @@ However we ensure that the ``async_iterator`` is actually an ``AsyncIterator``.
 
 
 adict
------
+-----------
 
-Transform an ``AsyncIterator`` to a ``dict``. This would be equivalent to::
+Transform an ``AsyncIterator`` to a ``dict``. This would be equivalent to::  
+
     {k: v async for (k, v) in async_iterator}
 
 However we ensure that the ``async_iterator`` is actually an ``AsyncIterator``.
 
-::
+Example::  
+
     >>> async def k_v_gen():
             async for n in await arange(1, 5):
                 yield (n, n * 2)
@@ -233,14 +243,15 @@ However we ensure that the ``async_iterator`` is actually an ``AsyncIterator``.
 
 
 amap
-----
+--------------
 
 ``AsyncGenerator`` that mimics the builtin ``map`` method.
 
 .. note::
     You do not use ``await`` on ``AsyncGenerator``'s
 
-::
+Example::  
+
     >>> async def main():
             async for val in amap('${}'.format, arange(1, 5)):
                 print(val)
@@ -276,7 +287,8 @@ in theory, you should be able to transform it into the output of any
 ``callable`` that takes a standard iterator.
 
 
-Example of how the ``alist`` method is declared in the code::
+Example of how the ``alist`` method is declared in the code::  
+
     >>> import functools
     >>> alist = functools.partial(transform_factory, _type=list)
     >>> alist.__doc__ = """Async list documentation."""

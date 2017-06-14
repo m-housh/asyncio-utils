@@ -6,9 +6,6 @@ from setuptools import setup
 with open('README.rst') as readme_file:
     readme = readme_file.read()
 
-with open('HISTORY.rst') as history_file:
-    history = history_file.read()
-
 requirements = [
     # TODO: put package requirements here
 ]
@@ -21,7 +18,7 @@ setup(
     name='asyncio_utils',
     version='0.1.0',
     description="Asyncio utilities",
-    long_description=readme + '\n\n' + history,
+    long_description=readme,
     author="Michael Housh",
     author_email='mhoush@houshhomeenergy.com',
     url='https://github.com/m-housh/asyncio_utils',
