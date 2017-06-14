@@ -11,7 +11,7 @@ import pytest
 import collections
 
 
-from asyncio_utils import asyncio_utils
+import asyncio_utils
 
 pytestmark = pytest.mark.asyncio
 
@@ -122,3 +122,17 @@ async def test_anext_with_default_kwarg():
     myrange = await asyncio_utils.arange(1)
     assert await asyncio_utils.anext(myrange) == 0
     assert await asyncio_utils.anext(myrange, default=3) == 3
+
+
+async def test_aset():
+    myset = await asyncio_utils.aset(asyncio_utils.arange(1, 5))
+    assert myset == {1, 2, 3, 4}
+
+
+async def test_adict():
+    async def k_v_gen():
+        async for n in await asyncio_utils.arange(1, 5):
+            yield (n, n * 2)
+
+    mydict = await asyncio_utils.adict(k_v_gen())
+    assert mydict == {1: 2, 2: 4, 3: 6, 4: 8}
