@@ -47,44 +47,6 @@ To run any of the examples::
     loop = asyncio.get_event_loop()
 
 
-
-aiter
---------------
-
-Example::  
-
-    >>> async def main():
-            # wraps a normal type that is iterable.
-            iterator = await aiter(range(1, 5))
-            async for n in iterator:
-                print(n)
-
-    >>> loop.run_until_complete(main())
-    1
-    2
-    3
-    4
-
-    >>> async def main():
-            # returns the same input if the input is already an
-            # AsyncIterator
-            aiterator = await arange(1, 5)
-            _aiter = await aiter(aiterator)
-            print(_aiter == aiterator)
-
-    >>> loop.run_until_complete(main())
-    True
-
-    >>> async def main():
-            # will await on an object if needed, to see if it returns
-            # an AsyncIterator
-            async for n in aiter(arange(1)):  # arange not awaited
-                print(n)
-
-    >>> loop.run_until_complete(main())
-        0
-
-
 aiter
 --------------
 
