@@ -16,7 +16,7 @@ test_requirements = [
 
 setup(
     name='asyncio_utils',
-    version='0.1.2',
+    version='0.1.3',
     description="Asyncio utilities",
     long_description=readme,
     author="Michael Housh",
