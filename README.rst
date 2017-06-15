@@ -165,6 +165,58 @@ Example failure because a non ``AsyncIterator`` passed in::
     TypeError: Not an AsyncIterator: <coroutine object arange at 0x1068170f8>
 
 
+amap
+--------------
+
+``AsyncGenerator`` that mimics the builtin ``map`` method.
+
+.. note::
+    You do not use ``await`` on ``AsyncGenerator``'s
+
+Example::  
+
+    >>> async def main():
+            async for val in amap('${}'.format, arange(1, 5)):
+                print(val)
+
+    >>> loop.run_until_complete(main())
+    $1
+    $2
+    $3
+    $4
+
+This also works if the function passed in is a coroutine::
+
+    >>> async def formatter(val):
+            return f'${val}'
+
+    >>> async def main():
+            async for val in amap(formatter, arange(1, 5)):
+                print(val)
+
+    >>> loop.run_until_complete(main())
+    $1
+    $2
+    $3
+    $4
+
+afilter
+---------------
+
+An ``async generator`` that mimics the builtin ``filter`` method.
+
+Example::
+
+    >>> async def main():
+            myfilter = await afilter(lambda x: x == 2, arange(1, 5))
+            print(await anext(myfilter, 'Oops no more twos'))
+            print(await anext(myfilter, 'Oops no more twos'))
+
+    >>> loop.run_until_complete(main())
+    2
+    Oops no more twos
+
+
 arange
 ---------------------
 
@@ -269,42 +321,6 @@ Example::
     {1: 2, 2: 4, 3: 6, 4: 8}
 
 
-amap
---------------
-
-``AsyncGenerator`` that mimics the builtin ``map`` method.
-
-.. note::
-    You do not use ``await`` on ``AsyncGenerator``'s
-
-Example::  
-
-    >>> async def main():
-            async for val in amap('${}'.format, arange(1, 5)):
-                print(val)
-
-    >>> loop.run_until_complete(main())
-    $1
-    $2
-    $3
-    $4
-
-This also works if the function passed in is a coroutine::
-
-    >>> async def formatter(val):
-            return f'${val}'
-
-    >>> async def main():
-            async for val in amap(formatter, arange(1, 5)):
-                print(val)
-
-    >>> loop.run_until_complete(main())
-    $1
-    $2
-    $3
-    $4
-
-
 transform_factory
 -----------------
 
@@ -320,29 +336,35 @@ Example of how the ``alist`` method is declared in the code::
     >>> alist = functools.partial(transform_factory, _type=list)
     >>> alist.__doc__ = """Async list documentation."""
 
+    >>> async def main():
+            print(await alist(arange(1, 5)))
 
-make_aiter
-----------
+    >>> loop.run_until_complete(main())
+    [1, 2, 3, 4]
 
-Non-async method that Wraps an iterator in an 
-``AsyncIterator``.  If the input has not been awaited on
-(is a coroutine) or is already and AsyncIterator, then we do nothing and
-return the input.
 
-(non async version of ``aiter``)
+make_async
+-----------------
 
-This can be useful if you want a class (for context) and need to ensure an
-``AsyncIterator`` inside the ``__init__`` method or any other non-async method.
+Make's any callable awaitable.  Can be used as a decorator.
 
 Example::
 
-    >>> async def main():
-            aiterator = make_aiter(range(1, 5))  # make_aiter can not be awaited
-            async for n in aiterator:
-                print(n)
+    >>> class AClass(object):
 
-    >>> loop.run_until_complete(main())
-    1
-    2
-    3
-    4
+            def __init__(self):
+                self.a = 'a'
+
+    >>> async_aclass = make(async_aclass)
+
+    # or as a decorator
+    >>> @make_async
+        def sync_a():
+            return 'a'
+
+    >>> async def main():
+            async_a = await async_aclass()
+            print(async_a.a == 'a')
+
+            print(await sync_a())
+            

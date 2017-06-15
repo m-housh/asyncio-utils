@@ -355,7 +355,10 @@ async def anext(iterator: typing.AsyncIterator[typing.Any], *args, **kwargs
 
 
 async def afilter(filter_func: typing.Callable[[typing.Any], bool],
-                  iterator: IteratorType) -> typing.Iterator[typing.Any]:
+                  iterator: IteratorType) -> typing.AsyncIterator[typing.Any]:
+    """Mimics the builtin ``filter`` method.
+
+    """
 
     async for val in aiter(iterator):
         if inspect.iscoroutinefunction(filter_func):
