@@ -20,11 +20,11 @@ __all__ = (
     'adict',
     'amap',
     'anext',
+    'afilter',
 
     # non-async
-    'make_aiter',
+    'make_async',
 )
-
 
 
 IteratorType = typing.Union[
@@ -41,47 +41,24 @@ TransformType = typing.Callable[
 ]
 
 
-async def _aiter_gen(iterator):
-    """Turns a regular iterator into an async iterator."""
-    for val in iter(iterator):
-        yield val
+async def aiter(val):
+    """An ``async generator`` that creates/ensures an ``AsyncIterator``.  This
+    method will always try to do the right thing and return an
+    ``AsyncIterator``.
 
+    If the input is ``Awaitable``, then we will ``await`` the result, and check
+    if it returns and ``AsyncIterator``.
 
-def make_aiter(iterator) -> typing.Union[typing.Awaitable, typing.AsyncIterator]:
-    """Non-async method that Wraps an iterator in an
-    :class:`collections.AsyncIterator`.  If the input has not been awaited on
-    (is a coroutine) or is already and AsyncIterator, then we do nothing and
-    return the input.
+    If the input is an ``async generator`` that was not called, then we will
+    call it and yield it's values.
 
-    :param iterator:  The input value to wrap/ensure is an AsyncIterator.
-
-    """
-    if isinstance(iterator, collections.Awaitable) or \
-            inspect.isawaitable(iterator) or \
-            isinstance(iterator, collections.AsyncIterator):
-        return iterator
-    return _aiter_gen(iterator)
-
-
-async def aiter(iterator) -> typing.AsyncIterator[typing.Any]:
-    """Coroutine that wraps/ensures an ``AsyncIterator``.
-    If the input has not been awaited on then we will await for the result.
-    If the input (or awaited result) is already an
-    ``AsyncIterator``, then we will return the input.  If it is
-    not an ``AsyncIterator`` but is an iterable then we will wrap it and
-    make an ``AsyncIterator``.
-
-    :param iterator:  The iterator to wrap/ensure is an
-                      :class:`collections.AsyncIterator`.
-
+    Else if the input is an ``iterator`` we iterate it and yield the values.
 
     Example::
 
         >>> async def main():
-                # wraps a normal type that is iterable.
-                iterator = await aiter(range(1, 5))
-                async for n in iterator:
-                    print(n)
+                async for v in aiter2(range(1, 5)):  # normal iterator
+                    print(v)
 
         >>> loop.run_until_complete(main())
         1
@@ -90,29 +67,54 @@ async def aiter(iterator) -> typing.AsyncIterator[typing.Any]:
         4
 
         >>> async def main():
-                # returns the same input if the input is already an
-                # AsyncIterator
-                aiterator = await arange(1, 5)
-                make_aiter = await aiter(aiterator)
-                print(make_aiter == aiterator)
+                async for v in aiter2(arange(1, 5)):  # not awaited
+                    print(v)
 
         >>> loop.run_until_complete(main())
-        True
+        1
+        2
+        3
+        4
 
         >>> async def main():
-                # will await on an object if needed, to see if it returns
-                # an AsyncIterator
-                async for n in aiter(arange(1)):  # arange not awaited
-                    print(n)
+                async for v in aiter2(await arange(1, 5)):  # awaited works
+                    print(v)
 
         >>> loop.run_until_complete(main())
-        0
+        1
+        2
+        3
+        4
+
+        >>> async def agen():
+                yield 1
+                yield 2
+                yield 3
+                yield 4
+
+        >>> async def main():
+                async for v in aiter2(agen):  # oops forgot to call it
+                    print(v)
+
+        >>> loop.run_until_complete(main())
+        1
+        2
+        3
+        4
 
     """
-    if inspect.isawaitable(iterator) or \
-            isinstance(iterator, collections.Awaitable):
-        iterator = await iterator
-    return make_aiter(iterator)
+    if inspect.isawaitable(val):
+        val = await val
+
+    if inspect.isasyncgenfunction(val):
+        val = val()
+
+    if isinstance(val, collections.AsyncIterator):
+        async for v in val:
+            yield v
+    else:
+        for v in iter(val):
+            yield v
 
 
 async def transform_factory(iterator: IteratorType, _type: TransformType=None
@@ -153,7 +155,7 @@ async def transform_factory(iterator: IteratorType, _type: TransformType=None
     if not callable(_type):
         raise TypeError('{} is not callable'.format(_type))
 
-    iterator = await aiter(iterator)
+    iterator = aiter(iterator)
 
     if inspect.iscoroutinefunction(_type):
         return await _type(iter([v async for v in iterator]))
@@ -169,7 +171,7 @@ async def arange(*args, **kwargs
     :param kwargs:  Passed to the builtin ``range`` method.
 
     """
-    return await aiter(range(*args, **kwargs))
+    return aiter(range(*args, **kwargs))
 
 
 alist = functools.partial(transform_factory, _type=list)
@@ -289,7 +291,7 @@ async def amap(afunc: typing.Callable[[typing.Any], typing.Any],
 
 
     """
-    async for val in await aiter(iterator):
+    async for val in aiter(iterator):
         if inspect.iscoroutinefunction(afunc):
             yield await afunc(val)
         else:
@@ -350,3 +352,60 @@ async def anext(iterator: typing.AsyncIterator[typing.Any], *args, **kwargs
         if use_default:
             return default
         raise StopAsyncIteration
+
+
+async def afilter(filter_func: typing.Callable[[typing.Any], bool],
+                  iterator: IteratorType) -> typing.Iterator[typing.Any]:
+
+    async for val in aiter(iterator):
+        if inspect.iscoroutinefunction(filter_func):
+            check = await filter_func(val)
+        else:
+            check = filter_func(val)
+
+        if check is True:
+            yield val
+
+
+def make_async(fn):
+    """Makes a normal function (or class) ``Awaitable``.  This can be useful if
+    you need an async and non-async version of the same method/class.
+
+    Can be used as a decorator or called with a single input.
+
+    :param fn:  The method/class to wrap and make async.
+
+    Example::
+
+        >>> @make_async
+            def my_non_async_func():
+                return 1
+
+        >>> async def main():
+                print(await my_non_async_func() == 1)
+
+        >>> loop.run_until_complete(main())
+        True
+
+    Non Decorator Example::
+
+        >>> class AlwaysOneClass(object):
+                def __init__(self):
+                    self.value = 1
+                def __repr__(self):
+                    return f'{self.__class__.__name__}(value={self.value})'
+
+        >>> async_one_class_factory = make_async(AlwaysOneClass)
+
+        >>> async def main():
+                print(repr(await async_one_class_factory()))
+
+        >>> loop.run_until_complete(main())
+        AlwaysOneClass(value=1)
+
+    """
+    @functools.wraps(fn)
+    async def decorator(*args, **kwargs):
+        return fn(*args, **kwargs)
+
+    return decorator

@@ -16,7 +16,7 @@ asyncio-utils
 Asyncio utilities for python >= 3.6
 
 A small package of utilities that mimics some builtin methods, but in an 
-asynchronous fashion.  
+asynchronous fashion.
 
 
 * Free software: MIT license
@@ -27,11 +27,19 @@ Features
 
 * Asyncio utilities
 
+Install
+-------
 
 To install::
 
     pip install asyncio-utils
 
+Usage
+------
+
+Almost everything is used with the ``await`` keyword before unless marked
+otherwise.  However most of the method inputs can be ``awaitable`` (but not
+actually awaited yet) and they will still work, unless marked otherwise.
 
 To run any of the examples::
 
@@ -42,17 +50,6 @@ To run any of the examples::
 
 aiter
 --------------
-
-Wraps/ensures an ``AsyncIterator``.  
-
-If the input is a coroutine (has not been awaited), then we will await the
-result to see if it returns an ``AsyncIterator``.  
-
-If the input (or awaited result) is an ``AsyncIterator`` then we just return the
-input.  
-
-If the input (or awaited result) is not an ``AsyncIterator`` then, but is an
-iterable, then we will wrap the iterable into an ``AsyncIterator``.
 
 Example::  
 
@@ -88,21 +85,76 @@ Example::
         0
 
 
-make_aiter
-----------
+aiter
+--------------
 
-Non-async method that Wraps an iterator in an 
-``AsyncIterator``.  If the input has not been awaited on
-(is a coroutine) or is already and AsyncIterator, then we do nothing and
-return the input.
+Wraps/ensures an ``AsyncIterator``.  
 
-(non async version of ``aiter``)
+If the input is ``Awaitable``, then we will ``await`` the result, and check
+if it returns and ``AsyncIterator``.
+
+If the input is an ``async generator`` that was not called, then we will
+call it and yield it's values.
+
+Else if the input is an ``iterator`` we iterate it and yield the values.
+
+
+Examples::
+
+    >>> async def main():
+        async for v in aiter2(range(1, 5)):  # normal iterator
+            print(v)
+
+    >>> loop.run_until_complete(main())
+    1
+    2
+    3
+    4
+
+    >>> async def main():
+            async for v in aiter2(arange(1, 5)):  # not awaited
+                print(v)
+
+    >>> loop.run_until_complete(main())
+    1
+    2
+    3
+    4
+
+    >>> async def main():
+            async for v in aiter2(await arange(1, 5)):  # awaited works
+                print(v)
+
+    >>> loop.run_until_complete(main())
+    1
+    2
+    3
+    4
+
+    >>> async def agen():
+            yield 1
+            yield 2
+            yield 3
+            yield 4
+
+    >>> async def main():
+            async for v in aiter2(agen):  # oops forgot to call it
+                print(v)
+
+    >>> loop.run_until_complete(main())
+    1
+    2
+    3
+    4
+
 
 
 anext
 -----------------
 
-Mimics the builtin ``next`` method.
+Mimics the builtin ``next`` method.  This method will not accept an 
+``awaitable``.  The input must be an ``AsyncIterator`` or you will get a 
+``TypeError``.
 
 Example::  
 
@@ -123,15 +175,32 @@ Example::
     4 True
     Sorry no more values!
 
+
+Example of using a default value if a ``StopAsyncIteration`` has occured::
+
     >>> async def main():
         myrange = await arange(1)
         print(await anext(myrange))
         print(await anext(myrange, 'Sorry no more values!'))
-        # or print(await anext(myrange, default='Sorry no more values!'))
+        # or as kwarg
+        print(await anext(myrange, default='Still no more values!'))
 
     >>> loop.run_until_complete(main())
     1
     Sorry no more values!
+    Still no more values!
+
+
+Example failure because a non ``AsyncIterator`` passed in::  
+
+    >>> async def main():
+            val = await anext(arange(1, 5))
+            print(val)  # never get here
+
+    >>> loop.run_until_complete(main())
+    Traceback (most recent call last):
+    ...
+    TypeError: Not an AsyncIterator: <coroutine object arange at 0x1068170f8>
 
 
 arange
@@ -290,5 +359,28 @@ Example of how the ``alist`` method is declared in the code::
     >>> alist.__doc__ = """Async list documentation."""
 
 
+make_aiter
+----------
 
+Non-async method that Wraps an iterator in an 
+``AsyncIterator``.  If the input has not been awaited on
+(is a coroutine) or is already and AsyncIterator, then we do nothing and
+return the input.
 
+(non async version of ``aiter``)
+
+This can be useful if you want a class (for context) and need to ensure an
+``AsyncIterator`` inside the ``__init__`` method or any other non-async method.
+
+Example::
+
+    >>> async def main():
+            aiterator = make_aiter(range(1, 5))  # make_aiter can not be awaited
+            async for n in aiterator:
+                print(n)
+
+    >>> loop.run_until_complete(main())
+    1
+    2
+    3
+    4
